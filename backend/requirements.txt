@@ -1,0 +1,6 @@
+asgiref==3.8.1
+Django==5.1.5
+django-cors-headers==4.6.0
+djangorestframework==3.15.2
+python-dotenv==1.0.1
+sqlparse==0.5.3
