@@ -4,6 +4,10 @@ export default function SubscriberTable() {
   const [subscribers, setSubscribers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [sortConfig, setSortConfig] = useState({
+    key: null,
+    direction: 'asc'
+  })
 
   useEffect(() => {
     const fetchSubscribers = async () => {
@@ -21,27 +25,84 @@ export default function SubscriberTable() {
     fetchSubscribers()
   }, [])
 
+  const sortData = (data, key) => {
+    if (!key) return data
+
+    return [...data].sort((a, b) => {
+      // Handle nested stats object
+      let aValue = key.includes('stats') ? 
+        a.stats?.[key.split('.')[1]] || 0 : 
+        a[key] || 0
+      let bValue = key.includes('stats') ? 
+        b.stats?.[key.split('.')[1]] || 0 : 
+        b[key] || 0
+
+      if (sortConfig.direction === 'asc') {
+        return aValue > bValue ? 1 : -1
+      }
+      return aValue < bValue ? 1 : -1
+    })
+  }
+
+  const handleSort = (key) => {
+    setSortConfig(prevConfig => ({
+      key,
+      direction: prevConfig.key === key && prevConfig.direction === 'asc' ? 'desc' : 'asc'
+    }))
+  }
+
   if (loading) return <div className="text-center p-4">Loading...</div>
   if (error) return <div className="text-red-500 p-4">{error}</div>
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Subscriber Analytics</h1>
+      <h1 className="text-2xl font-bold mb-4 text-pink-600">Subscriber Analytics</h1>
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white shadow-md rounded-lg">
-          <thead className="bg-gray-50">
+          {/* Pink header styling */}
+          <thead className="bg-pink-200">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Posts Received</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Open Rate</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Click Rate</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Clicks</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unique Clicks</th>
+              <th 
+                onClick={() => handleSort('email')}
+                className="px-6 py-3 text-left text-sm font-semibold text-pink-700 uppercase tracking-wider cursor-pointer hover:bg-pink-300"
+              >
+                Email {sortConfig.key === 'email' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+              </th>
+              <th 
+                onClick={() => handleSort('stats.total_received')}
+                className="px-6 py-3 text-left text-sm font-semibold text-pink-700 uppercase tracking-wider cursor-pointer hover:bg-pink-300"
+              >
+                Posts Received {sortConfig.key === 'stats.total_received' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+              </th>
+              <th 
+                onClick={() => handleSort('stats.open_rate')}
+                className="px-6 py-3 text-left text-sm font-semibold text-pink-700 uppercase tracking-wider cursor-pointer hover:bg-pink-300"
+              >
+                Open Rate {sortConfig.key === 'stats.open_rate' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+              </th>
+              <th 
+                onClick={() => handleSort('stats.click_rate')}
+                className="px-6 py-3 text-left text-sm font-semibold text-pink-700 uppercase tracking-wider cursor-pointer hover:bg-pink-300"
+              >
+                Click Rate {sortConfig.key === 'stats.click_rate' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+              </th>
+              <th 
+                onClick={() => handleSort('stats.total_clicked')}
+                className="px-6 py-3 text-left text-sm font-semibold text-pink-700 uppercase tracking-wider cursor-pointer hover:bg-pink-300"
+              >
+                Total Clicks {sortConfig.key === 'stats.total_clicked' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+              </th>
+              <th 
+                onClick={() => handleSort('stats.total_unique_clicked')}
+                className="px-6 py-3 text-left text-sm font-semibold text-pink-700 uppercase tracking-wider cursor-pointer hover:bg-pink-300"
+              >
+                Unique Clicks {sortConfig.key === 'stats.total_unique_clicked' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+              </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
-            {subscribers.map((subscriber) => (
-              <tr key={subscriber.id} className="hover:bg-gray-50">
+          <tbody className="divide-y divide-pink-200">
+            {sortData(subscribers, sortConfig.key).map((subscriber) => (
+              <tr key={subscriber.id} className="hover:bg-pink-50">
                 <td className="px-6 py-4 whitespace-nowrap">{subscriber.email}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{subscriber.stats?.total_received || 0}</td>
                 <td className="px-6 py-4 whitespace-nowrap">

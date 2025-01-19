@@ -3,8 +3,6 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .beehiiv_client import BeehiivClient
 
-# Create your views here.
-
 @api_view(['GET'])
 def get_subscribers(request):
     client = BeehiivClient()
