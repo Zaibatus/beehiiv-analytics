@@ -8,8 +8,8 @@ class BeehiivClient:
     BASE_URL = "https://api.beehiiv.com/v2"
     
     def __init__(self):
-        self.api_key = os.getenv("BEEHIIV_API_KEY")
-        self.publication_id = os.getenv("BEEHIIV_PUBLICATION_ID")
+        self.api_key = "fEAdbr042k0ysylUNIzXAE0b0zLXLFFpaLGGURgVMGSrgbmYKRYoaJs8NbdpaPGg"
+        self.publication_id = "pub_95898ac0-69d8-467f-a595-00816f36cefa"
         if not self.api_key:
             raise ValueError("BEEHIIV_API_KEY not found in environment variables")
         if not self.publication_id:
