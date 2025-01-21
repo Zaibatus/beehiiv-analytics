@@ -10,6 +10,11 @@ class BeehiivClient:
         self.api_key = api_key
         self.publication_id = publication_id
         self.base_url = "https://api.beehiiv.com/v2"
+        self.session = requests.Session()
+        self.session.headers.update({
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        })
         
     def get_subscribers(self, page=1, limit=100):
         url = f"{self.base_url}/publications/{self.publication_id}/subscriptions"
@@ -46,3 +51,46 @@ class BeehiivClient:
         except Exception as e:
             print(f"Request failed: {str(e)}")
             raise
+
+    def get_all_subscribers(self):
+        subscribers = []
+        page = 1
+        
+        while True:
+            response = self.get_subscribers(page=page)
+            if not response.get('data'):
+                break
+                
+            subscribers.extend(response['data'])
+            
+            if not response.get('next_page'):
+                break
+                
+            page += 1
+        
+        return subscribers
+
+    def get_subscriber_metrics(self):
+        response = self.get_subscribers()
+        subscribers = response.get('data', [])
+        
+        total_subscribers = len(subscribers)
+        
+        # Count subscribers who have clicked at least once
+        subscribers_with_clicks = sum(
+            1 for sub in subscribers 
+            if sub.get('stats', {}).get('total_unique_clicked', 0) >= 1
+        )
+        
+        # Calculate percentage of subscribers who clicked at least once
+        percent_clicked_once = (subscribers_with_clicks / total_subscribers * 100) if total_subscribers > 0 else 0
+        
+        print(f"Debug: Total subscribers: {total_subscribers}")
+        print(f"Debug: Subscribers who clicked at least once: {subscribers_with_clicks}")
+        print(f"Debug: Percentage: {percent_clicked_once}%")
+        
+        return {
+            'total_subscribers': total_subscribers,
+            'percent_clicked_once': round(percent_clicked_once, 1),
+            'subscribers': subscribers
+        }

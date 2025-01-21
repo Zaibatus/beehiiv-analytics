@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import SubscriberStats from './SubscriberStats.jsx';
 
 export default function SubscriberTable() {
   const [subscribers, setSubscribers] = useState([])
@@ -36,7 +37,8 @@ export default function SubscriberTable() {
     opens: { label: 'Open Rate', key: 'stats.open_rate', width: '10%' },
     clicks: { label: 'Click Rate', key: 'stats.click_rate', width: '10%' },
     total_clicks: { label: 'Total Clicks', key: 'stats.total_clicked', width: '10%' },
-    unique_clicks: { label: 'Unique Clicks', key: 'stats.total_unique_clicked', width: '10%' }
+    unique_clicks: { label: 'Unique Clicks', key: 'stats.total_unique_clicked', width: '10%' },
+    days_to_unsubscribe: { label: 'Days to Unsubscribe', key: 'days_to_unsubscribe', width: '10%' }
   };
 
   // Add toggle function
@@ -71,15 +73,25 @@ export default function SubscriberTable() {
     };
   }, [isColumnMenuOpen]);
 
+  const [stats, setStats] = useState({
+    total_subscribers: 0,
+    percent_clicked_once: 0
+  });
+
   useEffect(() => {
     const fetchSubscribers = async () => {
       try {
         const response = await fetch('http://localhost:8000/api/subscribers/')
         const data = await response.json()
         console.log("Fetched subscribers data:", data)  // Log fetched data
-        setSubscribers(data.data || [])
+        setSubscribers(data.subscribers || [])  // Changed from data.data to data.subscribers
+        setStats({
+          total_subscribers: data.total_subscribers || 0,
+          percent_clicked_once: data.percent_clicked_once || 0
+        })
         setLoading(false)
       } catch (err) {
+        console.error('Error fetching subscribers:', err)  // Added error logging
         setError('Failed to fetch subscribers')
         setLoading(false)
       }
@@ -176,6 +188,8 @@ export default function SubscriberTable() {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4 text-pink-600">Subscriber Analytics</h1>
+      
+      <SubscriberStats stats={stats} />
       
       {/* Filters Section */}
       <div className="mb-6 space-y-4 bg-pink-50 p-4 rounded-lg">
@@ -286,6 +300,9 @@ export default function SubscriberTable() {
                 )}
                 {visibleColumns.unique_clicks && (
                   <td className="px-4 py-3 whitespace-nowrap text-sm">{subscriber.stats?.total_unique_clicked || 0}</td>
+                )}
+                {visibleColumns.days_to_unsubscribe && (
+                  <td className="px-4 py-3 whitespace-nowrap text-sm">{subscriber.days_to_unsubscribe ? `${subscriber.days_to_unsubscribe} days` : '-'}</td>
                 )}
               </tr>
             ))}

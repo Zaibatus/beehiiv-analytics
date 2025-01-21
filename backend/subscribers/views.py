@@ -8,6 +8,9 @@ from django.views.decorators.http import require_http_methods
 import json
 import os
 import traceback
+from datetime import datetime
+import pytz
+from django.conf import settings
 
 @api_view(['GET'])
 def get_subscribers(request):
@@ -64,7 +67,20 @@ def get_subscribers(request):
         }
         
         print(f"Returning {len(formatted_response['data'])} subscribers")
-        return Response(formatted_response)
+
+        # Calculate days to unsubscribe
+        for subscriber in formatted_response['data']:
+            if subscriber.get('status') == 'inactive':
+                subscriber['days_to_unsubscribe'] = calculate_days_to_unsubscribe(subscriber)
+
+        # Get metrics
+        metrics = client.get_subscriber_metrics()
+
+        return Response({
+            'total_subscribers': metrics['total_subscribers'],
+            'percent_clicked_once': metrics['percent_clicked_once'],
+            'subscribers': metrics['subscribers']
+        })
         
     except Exception as e:
         print(f"Error in get_subscribers: {str(e)}")
@@ -73,6 +89,57 @@ def get_subscribers(request):
             {'message': f'Error fetching subscribers: {str(e)}'}, 
             status=500
         )
+
+def calculate_days_to_unsubscribe(subscriber):
+    if subscriber.get('status') != 'inactive':
+        return None
+    
+    # Debug print entire subscriber object for inactive subscribers
+    print("Inactive subscriber data:")
+    print(subscriber)
+    
+    created_at = subscriber.get('created_at')
+    updated_at = subscriber.get('updated_at')
+    
+    print(f"Created at: {created_at}")
+    print(f"Updated at: {updated_at}")
+    
+    # Check if either date is missing
+    if not created_at or not updated_at:
+        return None
+        
+    try:
+        # Try different date formats
+        date_formats = [
+            '%Y-%m-%dT%H:%M:%S.%fZ',
+            '%Y-%m-%dT%H:%M:%SZ',
+            '%Y-%m-%d %H:%M:%S'
+        ]
+        
+        subscribe_date = None
+        unsubscribe_date = None
+        
+        for date_format in date_formats:
+            try:
+                subscribe_date = datetime.strptime(created_at, date_format)
+                unsubscribe_date = datetime.strptime(updated_at, date_format)
+                break
+            except ValueError:
+                continue
+                
+        if not subscribe_date or not unsubscribe_date:
+            return None
+            
+        # Convert to UTC if needed
+        subscribe_date = subscribe_date.replace(tzinfo=pytz.UTC)
+        unsubscribe_date = unsubscribe_date.replace(tzinfo=pytz.UTC)
+        
+        days_difference = (unsubscribe_date - subscribe_date).days
+        return max(0, days_difference)  # Ensure we don't return negative days
+        
+    except Exception as e:
+        print(f"Error calculating days to unsubscribe: {e}")
+        return None
 
 @csrf_exempt
 @require_http_methods(["POST"])
