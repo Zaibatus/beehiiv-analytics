@@ -12,33 +12,50 @@ import traceback
 @api_view(['GET'])
 def get_subscribers(request):
     try:
-        # Read configuration from config file
+        # Read configuration
         config_path = os.path.join(os.path.dirname(__file__), 'config.json')
         
         try:
             with open(config_path, 'r') as f:
                 config = json.load(f)
-                print("Loaded config:", {
-                    'publication_id': config['publication_id'],
-                    'api_key_length': len(config['api_key'])
-                })
+                print("=== Configuration ===")
+                print(f"Publication ID: {config['publication_id']}")
+                print(f"API Key length: {len(config['api_key'])}")
         except FileNotFoundError:
             return Response(
-                {'message': 'Please configure your API credentials first'}, 
+                {'message': 'API configuration not found'}, 
+                status=400
+            )
+        except json.JSONDecodeError:
+            return Response(
+                {'message': 'Invalid configuration file'}, 
                 status=400
             )
         
-        # Create client with stored credentials
+        # Validate configuration
+        if not config.get('api_key') or not config.get('publication_id'):
+            return Response(
+                {'message': 'Missing API key or publication ID'}, 
+                status=400
+            )
+        
+        # Create client
         client = BeehiivClient(
             api_key=config['api_key'],
             publication_id=config['publication_id']
         )
         
-        print("Fetching subscribers...")
+        print("=== Fetching Subscribers ===")
         response_data = client.get_subscribers(limit=100)
-        print("API Response:", json.dumps(response_data, indent=2)[:500])  # Print first 500 chars
         
-        # Format the response to match what the frontend expects
+        if not response_data or 'data' not in response_data:
+            print("Warning: No data in response")
+            return Response(
+                {'message': 'No data received from API'}, 
+                status=404
+            )
+        
+        # Format response
         formatted_response = {
             'data': response_data.get('data', []),
             'total': response_data.get('total', 0),
@@ -46,13 +63,12 @@ def get_subscribers(request):
             'limit': response_data.get('limit', 100)
         }
         
-        print("Formatted response:", json.dumps(formatted_response, indent=2)[:500])
+        print(f"Returning {len(formatted_response['data'])} subscribers")
         return Response(formatted_response)
         
     except Exception as e:
         print(f"Error in get_subscribers: {str(e)}")
-        if hasattr(e, '__traceback__'):
-            print(traceback.format_exc())
+        print(traceback.format_exc())  # Print full traceback
         return Response(
             {'message': f'Error fetching subscribers: {str(e)}'}, 
             status=500
