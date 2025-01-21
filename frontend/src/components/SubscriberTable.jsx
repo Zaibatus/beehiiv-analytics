@@ -14,6 +14,7 @@ export default function SubscriberTable() {
       try {
         const response = await fetch('http://localhost:8000/api/subscribers/')
         const data = await response.json()
+        console.log("Fetched subscribers data:", data)  // Log fetched data
         setSubscribers(data.data || [])
         setLoading(false)
       } catch (err) {
