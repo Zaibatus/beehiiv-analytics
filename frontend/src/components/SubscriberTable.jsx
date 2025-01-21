@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 
 export default function SubscriberTable() {
   const [subscribers, setSubscribers] = useState([])
@@ -8,6 +8,68 @@ export default function SubscriberTable() {
     key: null,
     direction: 'asc'
   })
+  
+  // New filter states
+  const [filters, setFilters] = useState({
+    status: 'all',
+    sourceChannel: 'all'
+  })
+
+  // Add after other state declarations
+  const [visibleColumns, setVisibleColumns] = useState({
+    email: true,
+    status: true,
+    source_channel: true,
+    posts: true,
+    opens: true,
+    clicks: true,
+    total_clicks: true,
+    unique_clicks: true
+  });
+
+  // Add column configuration object
+  const columnConfig = {
+    email: { label: 'Email', key: 'email', width: '20%' },
+    status: { label: 'Status', key: 'status', width: '10%' },
+    source_channel: { label: 'Source / Channel', key: 'utm_data', width: '20%' },
+    posts: { label: 'Posts', key: 'stats.total_received', width: '10%' },
+    opens: { label: 'Open Rate', key: 'stats.open_rate', width: '10%' },
+    clicks: { label: 'Click Rate', key: 'stats.click_rate', width: '10%' },
+    total_clicks: { label: 'Total Clicks', key: 'stats.total_clicked', width: '10%' },
+    unique_clicks: { label: 'Unique Clicks', key: 'stats.total_unique_clicked', width: '10%' }
+  };
+
+  // Add toggle function
+  const toggleColumn = (columnId) => {
+    setVisibleColumns(prev => ({
+      ...prev,
+      [columnId]: !prev[columnId]
+    }));
+  };
+
+  const [isColumnMenuOpen, setIsColumnMenuOpen] = useState(false);
+
+  // Add this inside the component, after other state declarations
+  const dropdownRef = useRef(null);
+
+  // Add this useEffect to handle clicks outside the dropdown
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsColumnMenuOpen(false);
+      }
+    }
+
+    // Add event listener when dropdown is open
+    if (isColumnMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isColumnMenuOpen]);
 
   useEffect(() => {
     const fetchSubscribers = async () => {
@@ -71,9 +133,41 @@ export default function SubscriberTable() {
           ? 'bg-green-100 text-green-800' 
           : 'bg-red-100 text-red-800'
       }`}>
-        {status || 'unknown'}
+        {isActive ? 'active' : 'inactive'}
       </span>
     )
+  }
+
+  // Get unique source/channel combinations
+  const getUniqueSourceChannels = (data) => {
+    const combinations = new Set(data.map(sub => 
+      `${sub.utm_source || '-'}/${sub.utm_channel || '-'}`
+    ))
+    return ['all', ...Array.from(combinations)]
+  }
+
+  // Filter function
+  const filterSubscribers = (data) => {
+    return data.filter(subscriber => {
+      // Status filter
+      if (filters.status !== 'all') {
+        const isActive = subscriber.status === 'active'
+        const filterIsActive = filters.status === 'active'
+        if (isActive !== filterIsActive) {
+          return false
+        }
+      }
+
+      // Source/Channel filter
+      if (filters.sourceChannel !== 'all') {
+        const subSourceChannel = `${subscriber.utm_source || '-'}/${subscriber.utm_channel || '-'}`
+        if (subSourceChannel !== filters.sourceChannel) {
+          return false
+        }
+      }
+
+      return true
+    })
   }
 
   if (loading) return <div className="text-center p-4">Loading...</div>
@@ -82,79 +176,117 @@ export default function SubscriberTable() {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4 text-pink-600">Subscriber Analytics</h1>
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white shadow-md rounded-lg">
+      
+      {/* Filters Section */}
+      <div className="mb-6 space-y-4 bg-pink-50 p-4 rounded-lg">
+        <div className="flex flex-wrap gap-4">
+          {/* Status Filter */}
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-sm font-medium text-pink-700 mb-1">Status</label>
+            <select
+              value={filters.status}
+              onChange={(e) => setFilters(prev => ({...prev, status: e.target.value}))}
+              className="w-full rounded-md border-pink-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
+            >
+              <option value="all">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+
+          {/* Source/Channel Filter */}
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-sm font-medium text-pink-700 mb-1">Source / Channel</label>
+            <select
+              value={filters.sourceChannel}
+              onChange={(e) => setFilters(prev => ({...prev, sourceChannel: e.target.value}))}
+              className="w-full rounded-md border-pink-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
+            >
+              {getUniqueSourceChannels(subscribers).map(combo => (
+                <option key={combo} value={combo}>{combo}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Column Visibility Dropdown */}
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-sm font-medium text-pink-700 mb-1">Visible Columns</label>
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setIsColumnMenuOpen(!isColumnMenuOpen)}
+                className="w-full rounded-md border-pink-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 px-4 py-2 bg-white text-left text-sm flex justify-between items-center"
+              >
+                Customize Columns
+                <span className="ml-2">↓</span>
+              </button>
+              
+              {isColumnMenuOpen && (
+                <div className="absolute z-10 mt-1 w-full bg-white rounded-md shadow-lg border border-pink-100">
+                  <div className="p-2 space-y-1">
+                    {Object.entries(columnConfig).map(([id, config]) => (
+                      <label key={id} className="flex items-center p-2 hover:bg-pink-50 rounded cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={visibleColumns[id]}
+                          onChange={() => toggleColumn(id)}
+                          className="rounded border-pink-300 text-pink-600 focus:ring-pink-500 mr-2"
+                        />
+                        <span className="text-sm text-gray-700">{config.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Updated table container */}
+      <div className="overflow-x-auto shadow-md rounded-lg">
+        <table className="min-w-full table-fixed bg-white">
           <thead className="bg-pink-200">
             <tr>
-              <th 
-                onClick={() => handleSort('email')}
-                className="px-6 py-3 text-left text-sm font-semibold text-pink-700 uppercase tracking-wider cursor-pointer hover:bg-pink-300"
-              >
-                Email {sortConfig.key === 'email' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-              </th>
-              <th 
-                onClick={() => handleSort('status')}
-                className="px-6 py-3 text-left text-sm font-semibold text-pink-700 uppercase tracking-wider cursor-pointer hover:bg-pink-300"
-              >
-                Status {sortConfig.key === 'status' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-              </th>
-              <th 
-                onClick={() => handleSort('utm_data')}
-                className="px-6 py-3 text-left text-sm font-semibold text-pink-700 uppercase tracking-wider cursor-pointer hover:bg-pink-300"
-              >
-                Source / Channel {sortConfig.key === 'utm_data' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-              </th>
-              <th 
-                onClick={() => handleSort('stats.total_received')}
-                className="px-6 py-3 text-left text-sm font-semibold text-pink-700 uppercase tracking-wider cursor-pointer hover:bg-pink-300"
-              >
-                Posts Received {sortConfig.key === 'stats.total_received' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-              </th>
-              <th 
-                onClick={() => handleSort('stats.open_rate')}
-                className="px-6 py-3 text-left text-sm font-semibold text-pink-700 uppercase tracking-wider cursor-pointer hover:bg-pink-300"
-              >
-                Open Rate {sortConfig.key === 'stats.open_rate' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-              </th>
-              <th 
-                onClick={() => handleSort('stats.click_rate')}
-                className="px-6 py-3 text-left text-sm font-semibold text-pink-700 uppercase tracking-wider cursor-pointer hover:bg-pink-300"
-              >
-                Click Rate {sortConfig.key === 'stats.click_rate' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-              </th>
-              <th 
-                onClick={() => handleSort('stats.total_clicked')}
-                className="px-6 py-3 text-left text-sm font-semibold text-pink-700 uppercase tracking-wider cursor-pointer hover:bg-pink-300"
-              >
-                Total Clicks {sortConfig.key === 'stats.total_clicked' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-              </th>
-              <th 
-                onClick={() => handleSort('stats.total_unique_clicked')}
-                className="px-6 py-3 text-left text-sm font-semibold text-pink-700 uppercase tracking-wider cursor-pointer hover:bg-pink-300"
-              >
-                Unique Clicks {sortConfig.key === 'stats.total_unique_clicked' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-              </th>
+              {Object.entries(columnConfig).map(([id, config]) => 
+                visibleColumns[id] && (
+                  <th 
+                    key={id}
+                    onClick={() => handleSort(config.key)}
+                    className={`${config.width} px-4 py-3 text-left text-sm font-semibold text-pink-700 uppercase tracking-wider cursor-pointer hover:bg-pink-300`}
+                  >
+                    {config.label} {sortConfig.key === config.key && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </th>
+                )
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-pink-200">
-            {sortData(subscribers, sortConfig.key).map((subscriber) => (
+            {sortData(filterSubscribers(subscribers), sortConfig.key).map((subscriber) => (
               <tr key={subscriber.id} className="hover:bg-pink-50">
-                <td className="px-6 py-4 whitespace-nowrap">{subscriber.email}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {getStatusBadge(subscriber.status)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {getUtmInfo(subscriber)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">{subscriber.stats?.total_received || 0}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {(subscriber.stats?.open_rate || 0).toFixed(1)}%
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {(subscriber.stats?.click_rate || 0).toFixed(1)}%
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">{subscriber.stats?.total_clicked || 0}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{subscriber.stats?.total_unique_clicked || 0}</td>
+                {visibleColumns.email && (
+                  <td className="px-4 py-3 whitespace-nowrap text-sm">{subscriber.email}</td>
+                )}
+                {visibleColumns.status && (
+                  <td className="px-4 py-3 whitespace-nowrap text-sm">{getStatusBadge(subscriber.status)}</td>
+                )}
+                {visibleColumns.source_channel && (
+                  <td className="px-4 py-3 whitespace-nowrap text-sm">{getUtmInfo(subscriber)}</td>
+                )}
+                {visibleColumns.posts && (
+                  <td className="px-4 py-3 whitespace-nowrap text-sm">{subscriber.stats?.total_received || 0}</td>
+                )}
+                {visibleColumns.opens && (
+                  <td className="px-4 py-3 whitespace-nowrap text-sm">{(subscriber.stats?.open_rate || 0).toFixed(1)}%</td>
+                )}
+                {visibleColumns.clicks && (
+                  <td className="px-4 py-3 whitespace-nowrap text-sm">{(subscriber.stats?.click_rate || 0).toFixed(1)}%</td>
+                )}
+                {visibleColumns.total_clicks && (
+                  <td className="px-4 py-3 whitespace-nowrap text-sm">{subscriber.stats?.total_clicked || 0}</td>
+                )}
+                {visibleColumns.unique_clicks && (
+                  <td className="px-4 py-3 whitespace-nowrap text-sm">{subscriber.stats?.total_unique_clicked || 0}</td>
+                )}
               </tr>
             ))}
           </tbody>
