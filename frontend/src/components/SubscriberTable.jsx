@@ -12,7 +12,7 @@ export default function SubscriberTable() {
   // New filter states
   const [filters, setFilters] = useState({
     status: 'all',
-    sourceChannel: 'all'
+    sourceChannels: ['all']
   })
 
   // Add after other state declarations
@@ -48,21 +48,27 @@ export default function SubscriberTable() {
     }));
   };
 
+  // Replace single isColumnMenuOpen state with two separate states
   const [isColumnMenuOpen, setIsColumnMenuOpen] = useState(false);
+  const [isSourceMenuOpen, setIsSourceMenuOpen] = useState(false);
 
-  // Add this inside the component, after other state declarations
-  const dropdownRef = useRef(null);
+  // Add separate refs for each dropdown
+  const columnDropdownRef = useRef(null);
+  const sourceDropdownRef = useRef(null);
 
-  // Add this useEffect to handle clicks outside the dropdown
+  // Update useEffect to handle both dropdowns
   useEffect(() => {
     function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (columnDropdownRef.current && !columnDropdownRef.current.contains(event.target)) {
         setIsColumnMenuOpen(false);
+      }
+      if (sourceDropdownRef.current && !sourceDropdownRef.current.contains(event.target)) {
+        setIsSourceMenuOpen(false);
       }
     }
 
-    // Add event listener when dropdown is open
-    if (isColumnMenuOpen) {
+    // Add event listener when either dropdown is open
+    if (isColumnMenuOpen || isSourceMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
@@ -70,7 +76,7 @@ export default function SubscriberTable() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isColumnMenuOpen]);
+  }, [isColumnMenuOpen, isSourceMenuOpen]);
 
   const [stats, setStats] = useState({
     total_subscribers: 0,
@@ -161,8 +167,8 @@ export default function SubscriberTable() {
   const getUniqueSourceChannels = (data) => {
     const combinations = new Set(data.map(sub => 
       `${sub.utm_source || '-'}/${sub.utm_channel || '-'}`
-    ))
-    return ['all', ...Array.from(combinations)]
+    ));
+    return ['all', ...Array.from(combinations).sort()];
   }
 
   // Filter function
@@ -170,23 +176,23 @@ export default function SubscriberTable() {
     return data.filter(subscriber => {
       // Status filter
       if (filters.status !== 'all') {
-        const isActive = subscriber.status === 'active'
-        const filterIsActive = filters.status === 'active'
+        const isActive = subscriber.status === 'active';
+        const filterIsActive = filters.status === 'active';
         if (isActive !== filterIsActive) {
-          return false
+          return false;
         }
       }
 
       // Source/Channel filter
-      if (filters.sourceChannel !== 'all') {
-        const subSourceChannel = `${subscriber.utm_source || '-'}/${subscriber.utm_channel || '-'}`
-        if (subSourceChannel !== filters.sourceChannel) {
-          return false
+      if (!filters.sourceChannels.includes('all')) {
+        const subSourceChannel = `${subscriber.utm_source || '-'}/${subscriber.utm_channel || '-'}`;
+        if (!filters.sourceChannels.includes(subSourceChannel)) {
+          return false;
         }
       }
 
-      return true
-    })
+      return true;
+    });
   }
 
   if (loading) return <div className="text-center p-4">Loading...</div>
@@ -239,21 +245,58 @@ export default function SubscriberTable() {
           {/* Source/Channel Filter */}
           <div className="flex-1 min-w-[200px]">
             <label className="block text-sm font-medium text-pink-700 mb-1">Source / Channel</label>
-            <select
-              value={filters.sourceChannel}
-              onChange={(e) => setFilters(prev => ({...prev, sourceChannel: e.target.value}))}
-              className="w-full rounded-md border-pink-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 px-4 py-2 bg-white text-left text-sm"
-            >
-              {getUniqueSourceChannels(subscribers).map(combo => (
-                <option key={combo} value={combo}>{combo}</option>
-              ))}
-            </select>
+            <div className="relative" ref={sourceDropdownRef}>
+              <button
+                onClick={() => setIsSourceMenuOpen(prev => !prev)}
+                className="w-full rounded-md border-pink-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 px-4 py-2 bg-white text-left text-sm flex justify-between items-center"
+              >
+                {filters.sourceChannels.length === 1 && filters.sourceChannels[0] === 'all' 
+                  ? 'All Sources' 
+                  : `${filters.sourceChannels.length} selected`}
+                <span className="ml-2">↓</span>
+              </button>
+              
+              {isSourceMenuOpen && (
+                <div className="absolute z-10 mt-1 w-full bg-white rounded-md shadow-lg border border-pink-100">
+                  <div className="p-2 space-y-1 max-h-60 overflow-y-auto">
+                    {getUniqueSourceChannels(subscribers).map(source => (
+                      <label key={source} className="flex items-center p-2 hover:bg-pink-50 rounded cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={filters.sourceChannels.includes(source)}
+                          onChange={() => {
+                            setFilters(prev => {
+                              if (source === 'all') {
+                                return { ...prev, sourceChannels: ['all'] };
+                              }
+                              
+                              let newSourceChannels = prev.sourceChannels.includes(source)
+                                ? prev.sourceChannels.filter(s => s !== source)
+                                : [...prev.sourceChannels.filter(s => s !== 'all'), source];
+                              
+                              // If nothing is selected, default to 'all'
+                              if (newSourceChannels.length === 0) {
+                                newSourceChannels = ['all'];
+                              }
+                              
+                              return { ...prev, sourceChannels: newSourceChannels };
+                            });
+                          }}
+                          className="rounded border-pink-300 text-pink-600 focus:ring-pink-500 mr-2"
+                        />
+                        <span className="text-sm text-gray-700">{source}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Column Visibility Dropdown */}
           <div className="flex-1 min-w-[200px]">
             <label className="block text-sm font-medium text-pink-700 mb-1">Visible Columns</label>
-            <div className="relative" ref={dropdownRef}>
+            <div className="relative" ref={columnDropdownRef}>
               <button
                 onClick={() => setIsColumnMenuOpen(!isColumnMenuOpen)}
                 className="w-full rounded-md border-pink-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 px-4 py-2 bg-white text-left text-sm flex justify-between items-center"
