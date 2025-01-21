@@ -1,0 +1,71 @@
+.subscriber-container {
+  @apply max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+}
+
+.subscriber-title {
+  @apply text-2xl font-bold mb-8 text-pink-600 text-center;
+}
+
+.filters-container {
+  @apply mb-8 bg-pink-50 p-6 rounded-xl shadow-sm;
+}
+
+.filters-grid {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-6;
+}
+
+.filter-label {
+  @apply block text-sm font-medium text-pink-700 mb-2;
+}
+
+.filter-select {
+  @apply w-full rounded-lg border-pink-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 bg-white;
+}
+
+.column-dropdown {
+  @apply relative;
+}
+
+.column-button {
+  @apply w-full rounded-lg border border-pink-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 px-4 py-2 bg-white text-left text-sm flex justify-between items-center;
+}
+
+.column-menu {
+  @apply absolute z-10 mt-1 w-full bg-white rounded-lg shadow-lg border border-pink-100;
+}
+
+.column-option {
+  @apply flex items-center p-2 hover:bg-pink-50 rounded-md cursor-pointer;
+}
+
+.table-container {
+  @apply bg-white rounded-xl shadow-sm overflow-hidden;
+}
+
+.table-wrapper {
+  @apply overflow-x-auto;
+}
+
+.subscriber-table {
+  @apply min-w-full divide-y divide-pink-200;
+}
+
+.table-header {
+  @apply bg-pink-100;
+}
+
+.header-cell {
+  @apply px-6 py-4 text-left text-sm font-semibold text-pink-700 uppercase tracking-wider cursor-pointer hover:bg-pink-200 transition-colors;
+}
+
+.table-body {
+  @apply divide-y divide-pink-100;
+}
+
+.table-row {
+  @apply hover:bg-pink-50 transition-colors;
+}
+
+.table-cell {
+  @apply px-6 py-4 whitespace-nowrap text-sm text-gray-700;
+}

@@ -74,7 +74,9 @@ export default function SubscriberTable() {
 
   const [stats, setStats] = useState({
     total_subscribers: 0,
-    percent_clicked_once: 0
+    active_subscribers: 0,
+    percent_clicked_once: 0,
+    subscribers_clicked: 0
   });
 
   useEffect(() => {
@@ -82,15 +84,21 @@ export default function SubscriberTable() {
       try {
         const response = await fetch('http://localhost:8000/api/subscribers/')
         const data = await response.json()
-        console.log("Fetched subscribers data:", data)  // Log fetched data
-        setSubscribers(data.subscribers || [])  // Changed from data.data to data.subscribers
+        console.log("Fetched subscribers data:", data)
+        setSubscribers(data.subscribers || [])
+        
+        // Calculate active subscribers
+        const activeCount = data.subscribers.filter(sub => sub.status === 'active').length;
+        
         setStats({
           total_subscribers: data.total_subscribers || 0,
-          percent_clicked_once: data.percent_clicked_once || 0
+          active_subscribers: activeCount,
+          percent_clicked_once: data.percent_clicked_once || 0,
+          subscribers_clicked: Math.round((data.percent_clicked_once * data.total_subscribers) / 100)
         })
         setLoading(false)
       } catch (err) {
-        console.error('Error fetching subscribers:', err)  // Added error logging
+        console.error('Error fetching subscribers:', err)
         setError('Failed to fetch subscribers')
         setLoading(false)
       }
@@ -188,6 +196,29 @@ export default function SubscriberTable() {
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4 text-pink-600">Subscriber Analytics</h1>
       
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-white p-4 rounded-lg shadow border border-pink-100">
+          <h3 className="text-sm font-medium text-gray-500">Total Subscribers</h3>
+          <p className="text-2xl font-bold text-pink-600">{stats.total_subscribers}</p>
+        </div>
+        
+        <div className="bg-white p-4 rounded-lg shadow border border-pink-100">
+          <h3 className="text-sm font-medium text-gray-500">Active Subscribers</h3>
+          <p className="text-2xl font-bold text-pink-600">{stats.active_subscribers}</p>
+        </div>
+        
+        <div className="bg-white p-4 rounded-lg shadow border border-pink-100">
+          <h3 className="text-sm font-medium text-gray-500">Subscribers Who Clicked</h3>
+          <p className="text-2xl font-bold text-pink-600">
+            {stats.subscribers_clicked} 
+            <span className="text-sm text-pink-400 ml-1">
+              ({stats.percent_clicked_once.toFixed(1)}%)
+            </span>
+          </p>
+        </div>
+      </div>
+
       {/* Filters Section */}
       <div className="mb-6 space-y-4 bg-pink-50 p-4 rounded-lg">
         <div className="flex flex-wrap gap-4">
