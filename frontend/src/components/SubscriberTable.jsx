@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react'
-import SubscriberStats from './SubscriberStats.jsx';
 
 export default function SubscriberTable() {
   const [subscribers, setSubscribers] = useState([])
@@ -189,8 +188,6 @@ export default function SubscriberTable() {
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4 text-pink-600">Subscriber Analytics</h1>
       
-      <SubscriberStats stats={stats} />
-      
       {/* Filters Section */}
       <div className="mb-6 space-y-4 bg-pink-50 p-4 rounded-lg">
         <div className="flex flex-wrap gap-4">
@@ -200,7 +197,7 @@ export default function SubscriberTable() {
             <select
               value={filters.status}
               onChange={(e) => setFilters(prev => ({...prev, status: e.target.value}))}
-              className="w-full rounded-md border-pink-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
+              className="w-full rounded-md border-pink-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 px-4 py-2 bg-white text-left text-sm"
             >
               <option value="all">All Statuses</option>
               <option value="active">Active</option>
@@ -214,7 +211,7 @@ export default function SubscriberTable() {
             <select
               value={filters.sourceChannel}
               onChange={(e) => setFilters(prev => ({...prev, sourceChannel: e.target.value}))}
-              className="w-full rounded-md border-pink-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
+              className="w-full rounded-md border-pink-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 px-4 py-2 bg-white text-left text-sm"
             >
               {getUniqueSourceChannels(subscribers).map(combo => (
                 <option key={combo} value={combo}>{combo}</option>
