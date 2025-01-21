@@ -4,6 +4,5 @@ pip install -r requirements.txt
 
 cd backend
 
-python manage.py collectstatic
+python manage.py runserver
 
-python manage.py migrate
