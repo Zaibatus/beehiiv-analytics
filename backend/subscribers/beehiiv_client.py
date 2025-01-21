@@ -19,11 +19,11 @@ class BeehiivClient:
             "Authorization": f"Bearer {self.api_key}"
         }
         
-        # Try with just stats first
+        # Updated expand parameters based on Beehiiv API documentation
         params = {
             "limit": limit,
             "page": page,
-            "expand": "stats"  # Simplified parameter
+            "expand[]": ["stats", "utm_data"]  # Changed from subscription_stats to stats
         }
         
         try:

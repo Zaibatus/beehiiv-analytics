@@ -30,13 +30,18 @@ export default function SubscriberTable() {
     if (!key) return data
 
     return [...data].sort((a, b) => {
-      // Handle nested stats object
-      let aValue = key.includes('stats') ? 
-        a.stats?.[key.split('.')[1]] || 0 : 
-        a[key] || 0
-      let bValue = key.includes('stats') ? 
-        b.stats?.[key.split('.')[1]] || 0 : 
-        b[key] || 0
+      let aValue, bValue
+
+      if (key === 'utm_data') {
+        aValue = `${a.utm_source || ''}/${a.utm_channel || ''}`
+        bValue = `${b.utm_source || ''}/${b.utm_channel || ''}`
+      } else if (key.includes('stats')) {
+        aValue = a.stats?.[key.split('.')[1]] || 0
+        bValue = b.stats?.[key.split('.')[1]] || 0
+      } else {
+        aValue = a[key] || ''
+        bValue = b[key] || ''
+      }
 
       if (sortConfig.direction === 'asc') {
         return aValue > bValue ? 1 : -1
@@ -52,6 +57,25 @@ export default function SubscriberTable() {
     }))
   }
 
+  const getUtmInfo = (subscriber) => {
+    const source = subscriber.utm_source || '-'
+    const channel = subscriber.utm_channel || '-'
+    return `${source} / ${channel}`
+  }
+
+  const getStatusBadge = (status) => {
+    const isActive = status === 'active'
+    return (
+      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+        isActive 
+          ? 'bg-green-100 text-green-800' 
+          : 'bg-red-100 text-red-800'
+      }`}>
+        {status || 'unknown'}
+      </span>
+    )
+  }
+
   if (loading) return <div className="text-center p-4">Loading...</div>
   if (error) return <div className="text-red-500 p-4">{error}</div>
 
@@ -60,7 +84,6 @@ export default function SubscriberTable() {
       <h1 className="text-2xl font-bold mb-4 text-pink-600">Subscriber Analytics</h1>
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white shadow-md rounded-lg">
-          {/* Pink header styling */}
           <thead className="bg-pink-200">
             <tr>
               <th 
@@ -68,6 +91,18 @@ export default function SubscriberTable() {
                 className="px-6 py-3 text-left text-sm font-semibold text-pink-700 uppercase tracking-wider cursor-pointer hover:bg-pink-300"
               >
                 Email {sortConfig.key === 'email' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+              </th>
+              <th 
+                onClick={() => handleSort('status')}
+                className="px-6 py-3 text-left text-sm font-semibold text-pink-700 uppercase tracking-wider cursor-pointer hover:bg-pink-300"
+              >
+                Status {sortConfig.key === 'status' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+              </th>
+              <th 
+                onClick={() => handleSort('utm_data')}
+                className="px-6 py-3 text-left text-sm font-semibold text-pink-700 uppercase tracking-wider cursor-pointer hover:bg-pink-300"
+              >
+                Source / Channel {sortConfig.key === 'utm_data' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
               </th>
               <th 
                 onClick={() => handleSort('stats.total_received')}
@@ -105,6 +140,12 @@ export default function SubscriberTable() {
             {sortData(subscribers, sortConfig.key).map((subscriber) => (
               <tr key={subscriber.id} className="hover:bg-pink-50">
                 <td className="px-6 py-4 whitespace-nowrap">{subscriber.email}</td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {getStatusBadge(subscriber.status)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {getUtmInfo(subscriber)}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap">{subscriber.stats?.total_received || 0}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {(subscriber.stats?.open_rate || 0).toFixed(1)}%
