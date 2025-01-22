@@ -16,8 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from subscribers import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('subscribers.urls')),
+    path('api/cors-check/', views.cors_check, name='cors-check'),
 ]

@@ -188,3 +188,7 @@ def save_config(request):
         return JsonResponse({'message': 'Invalid JSON in request body'}, status=400)
     except Exception as e:
         return JsonResponse({'message': str(e)}, status=500)
+
+@require_http_methods(["GET"])
+def cors_check(request):
+    return JsonResponse({"status": "ok"}, status=200)
