@@ -24,8 +24,9 @@ function ApiConfigForm() {
     setIsLoading(true);
 
     try {
-      console.log('Sending request to save config...');
-      const response = await fetch('http://localhost:8000/api/config', {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      console.log('Sending request to save config...', `${API_URL}/api/config`);
+      const response = await fetch(`${API_URL}/api/config`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
