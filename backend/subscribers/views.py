@@ -197,7 +197,7 @@ def cors_check(request):
             "message": "CORS check successful"
         })
     except Exception as e:
-        print(f"CORS check error: {str(e)}")
+        print(f"Error in cors_check: {str(e)}")  # Add logging
         return JsonResponse({
             "status": "error",
             "message": str(e)
