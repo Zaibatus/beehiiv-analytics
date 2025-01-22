@@ -1,6 +1,18 @@
 import React, { useState } from 'react';
 import './ApiCredentialsForm.css';
 
+/**
+* A form component to collect API credentials and handle submission.
+* @example
+* onSubmit({ apiKey: 'yourApiKey', publicationId: 'yourPublicationId' })
+* // Calls the onSubmit function with provided credentials
+* @param {function} {onSubmit} - Callback function invoked with the credentials when the form is submitted.
+* @returns {JSX.Element} A form for entering API key and publication ID with a submit button.
+* @description
+*   - Utilizes React `useState` to manage form input values for `apiKey` and `publicationId`.
+*   - Prevents default form submission behavior using `e.preventDefault()`.
+*   - The component is styled with a className of "credentials-container" and each form element is wrapped in a "form-group".
+*/
 const ApiCredentialsForm = ({ onSubmit }) => {
   const [credentials, setCredentials] = useState({
     apiKey: '',
