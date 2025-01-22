@@ -6,6 +6,8 @@ python-dotenv==1.0.1
 sqlparse==0.5.3
 celery==5.3.4
 redis==5.0.0
-psycopg2-binary==2.9.7
+psycopg2-binary==2.9.9
 requests==2.31.0
-gunicorn==20.1.0
+gunicorn==21.2.0
+dj-database-url==2.1.0
+whitenoise==6.6.0

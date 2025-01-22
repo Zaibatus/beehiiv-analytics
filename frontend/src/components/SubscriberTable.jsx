@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 export default function SubscriberTable() {
   const [subscribers, setSubscribers] = useState([])
   const [loading, setLoading] = useState(true)
@@ -88,7 +90,7 @@ export default function SubscriberTable() {
   useEffect(() => {
     const fetchSubscribers = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/subscribers/')
+        const response = await fetch(`${API_URL}/api/subscribers/`)
         const data = await response.json()
         console.log("Fetched subscribers data:", data)
         setSubscribers(data.subscribers || [])

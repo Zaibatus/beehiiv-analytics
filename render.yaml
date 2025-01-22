@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: beehiiv-analytics-backend
+    env: python
+    buildCommand: ./build.sh
+    startCommand: cd backend && gunicorn core.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
+      - key: DATABASE_URL
+        value: sqlite:///db.sqlite3
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: false
+      - key: ALLOWED_HOSTS
+        value: .onrender.com
