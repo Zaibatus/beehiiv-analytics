@@ -33,11 +33,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'your-default-secret-key')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = [
-    "beehiiv-analytics-backend-boy8.onrender.com",
-    "localhost",
-    "127.0.0.1",
-]
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -139,42 +135,4 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Remove or set to False in production
-CORS_ALLOWED_ORIGINS = [
-    "https://beehiiv-analytics-frontend.onrender.com",
-    "http://localhost:5173",
-]
-
-# Add these additional CORS settings
-CORS_ALLOW_METHODS = [
-    "DELETE",
-    "GET",
-    "OPTIONS",
-    "PATCH",
-    "POST",
-    "PUT",
-]
-
-CORS_ALLOW_HEADERS = [
-    "accept",
-    "accept-encoding",
-    "authorization",
-    "content-type",
-    "dnt",
-    "origin",
-    "user-agent",
-    "x-csrftoken",
-    "x-requested-with",
-]
-
-# Add these settings
-CORS_ALLOW_CREDENTIALS = True
-CSRF_TRUSTED_ORIGINS = [
-    "https://beehiiv-analytics-frontend.onrender.com",
-]
-
-CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
-CSRF_COOKIE_SECURE = True
-CSRF_COOKIE_SAMESITE = 'None'
-SESSION_COOKIE_SECURE = True
-SESSION_COOKIE_SAMESITE = 'None'
+CORS_ALLOW_ALL_ORIGINS = True

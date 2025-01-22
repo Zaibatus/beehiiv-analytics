@@ -189,6 +189,16 @@ def save_config(request):
     except Exception as e:
         return JsonResponse({'message': str(e)}, status=500)
 
-@require_http_methods(["GET"])
+@csrf_exempt
 def cors_check(request):
-    return JsonResponse({"status": "ok"}, status=200)
+    try:
+        return JsonResponse({
+            "status": "ok",
+            "message": "CORS check successful"
+        })
+    except Exception as e:
+        print(f"CORS check error: {str(e)}")
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
+        }, status=500)
