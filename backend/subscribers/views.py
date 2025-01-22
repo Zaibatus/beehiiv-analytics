@@ -145,49 +145,56 @@ def calculate_days_to_unsubscribe(subscriber):
 @require_http_methods(["POST"])
 def save_config(request):
     try:
-        print("Received request body:", request.body.decode('utf-8'))
+        print("=== Starting save_config ===")
+        print("Request method:", request.method)
+        print("Request headers:", dict(request.headers))
+        
         data = json.loads(request.body)
+        print("Parsed request data:", {
+            'apiKey': '***' if data.get('apiKey') else None,
+            'publicationId': data.get('publicationId')
+        })
+        
         api_key = data.get('apiKey', '').strip()
         publication_id = data.get('publicationId', '').strip()
 
         if not api_key or not publication_id:
+            print("Missing required fields")
             return JsonResponse(
                 {'message': 'API key and Publication ID are required'}, 
                 status=400
             )
 
-        # Test the credentials by trying to fetch subscribers
+        # Test the credentials
+        print("Testing credentials...")
         client = BeehiivClient(api_key, publication_id)
+        
         try:
-            print("Attempting to fetch subscribers...")
             result = client.get_subscribers(page=1)
-            print("Successfully fetched subscribers")
+            print("Credentials test successful")
             
-            # Store credentials securely
-            config = {
-                'api_key': api_key,
-                'publication_id': publication_id
-            }
-            
+            # Save config
             config_path = os.path.join(os.path.dirname(__file__), 'config.json')
             with open(config_path, 'w') as f:
-                json.dump(config, f)
-
+                json.dump({
+                    'api_key': api_key,
+                    'publication_id': publication_id
+                }, f)
+            print("Configuration saved successfully")
+            
             return JsonResponse({'message': 'Configuration saved successfully'})
-
+            
         except Exception as e:
-            error_message = str(e)
-            if "Publication not found" in error_message:
-                return JsonResponse({'message': error_message}, status=404)
-            elif "unauthorized" in error_message.lower():
-                return JsonResponse({'message': 'Invalid API key'}, status=401)
-            else:
-                return JsonResponse({'message': error_message}, status=500)
-
-    except json.JSONDecodeError:
-        return JsonResponse({'message': 'Invalid JSON in request body'}, status=400)
+            print(f"Error testing credentials: {str(e)}")
+            return JsonResponse({'message': str(e)}, status=401)
+            
     except Exception as e:
-        return JsonResponse({'message': str(e)}, status=500)
+        print(f"Error in save_config: {str(e)}")
+        print(f"Full traceback: {traceback.format_exc()}")
+        return JsonResponse({
+            'message': f'Server error: {str(e)}',
+            'traceback': traceback.format_exc()
+        }, status=500)
 
 @csrf_exempt
 def cors_check(request):
