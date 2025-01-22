@@ -28,8 +28,11 @@ function ApiConfigForm() {
       console.log('Sending request to save config...', `${API_URL}/api/config`);
       const response = await fetch(`${API_URL}/api/config`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Origin': 'https://beehiiv-analytics-frontend.onrender.com'
         },
         body: JSON.stringify(formData)
       });
