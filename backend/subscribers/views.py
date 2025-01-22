@@ -192,13 +192,16 @@ def save_config(request):
 @csrf_exempt
 def cors_check(request):
     try:
+        print("CORS check endpoint hit")  # Debug print
         return JsonResponse({
             "status": "ok",
             "message": "CORS check successful"
         })
     except Exception as e:
-        print(f"Error in cors_check: {str(e)}")  # Add logging
+        print(f"Error in cors_check: {str(e)}")
+        print(f"Full traceback: {traceback.format_exc()}")  # Add full traceback
         return JsonResponse({
             "status": "error",
-            "message": str(e)
+            "message": str(e),
+            "traceback": traceback.format_exc()
         }, status=500)
