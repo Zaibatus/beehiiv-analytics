@@ -136,6 +136,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CORS_ALLOWED_ORIGINS = [
-    "https://your-frontend-app.onrender.com",  # We'll update this later
+    "https://beehiiv-analytics-backend-boy8.onrender.com",  # We'll update this later
     "http://localhost:5173",
 ]
