@@ -102,6 +102,7 @@ function ApiConfigForm() {
               className="form-input"
               placeholder="Enter your publication ID"
               required
+              autoComplete="off"
             />
           </div>
           <p className="mt-1 text-sm text-gray-500">
