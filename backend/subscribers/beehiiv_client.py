@@ -53,26 +53,25 @@ class BeehiivClient:
             raise
 
     def get_all_subscribers(self):
-        subscribers = []
+        """Fetch all subscribers by automatically handling pagination"""
+        all_subscribers = []
         page = 1
+        limit = 1000  # Maximum allowed by Beehiiv API
         
         while True:
-            response = self.get_subscribers(page=page)
-            if not response.get('data'):
-                break
-                
-            subscribers.extend(response['data'])
+            response = self.get_subscribers(page=page, limit=limit)
+            subscribers = response.get('data', [])
             
-            if not response.get('next_page'):
+            if not subscribers:  # No more results
                 break
                 
+            all_subscribers.extend(subscribers)
             page += 1
-        
-        return subscribers
+            
+        return all_subscribers
 
     def get_subscriber_metrics(self):
-        response = self.get_subscribers()
-        subscribers = response.get('data', [])
+        subscribers = self.get_all_subscribers()  # Use get_all_subscribers instead of get_subscribers
         
         total_subscribers = len(subscribers)
         

@@ -49,7 +49,7 @@ def get_subscribers(request):
         )
         
         print("=== Fetching Subscribers ===")
-        response_data = client.get_subscribers(limit=100)
+        response_data = client.get_subscribers(limit=500)  # Increased from 100 to 1000
         
         if not response_data or 'data' not in response_data:
             print("Warning: No data in response")
@@ -63,7 +63,7 @@ def get_subscribers(request):
             'data': response_data.get('data', []),
             'total': response_data.get('total', 0),
             'page': response_data.get('page', 1),
-            'limit': response_data.get('limit', 100)
+            'limit': response_data.get('limit', 1000)
         }
         
         print(f"Returning {len(formatted_response['data'])} subscribers")
