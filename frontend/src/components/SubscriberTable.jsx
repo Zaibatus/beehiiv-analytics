@@ -87,6 +87,10 @@ export default function SubscriberTable() {
     subscribers_clicked: 0
   });
 
+  // Add these new state variables after other state declarations
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   useEffect(() => {
     const fetchSubscribers = async () => {
       try {
@@ -196,6 +200,94 @@ export default function SubscriberTable() {
       return true;
     });
   }
+
+  // Add this helper function before the return statement
+  const paginateData = (data) => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return data.slice(startIndex, startIndex + itemsPerPage);
+  };
+
+  // Add this pagination component right before the table div
+  const PaginationControls = ({ totalItems }) => {
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    
+    return (
+      <div className="flex items-center justify-between bg-white p-4 rounded-lg shadow border border-pink-100 mb-4">
+        <div className="flex items-center space-x-4">
+          <select
+            value={itemsPerPage}
+            onChange={(e) => {
+              setItemsPerPage(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="rounded-md border-pink-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 text-sm px-3 py-2 bg-pink-50 text-pink-700 font-medium hover:bg-pink-100 transition-colors duration-200"
+          >
+            <option value={10}>10 per page</option>
+            <option value={25}>25 per page</option>
+            <option value={50}>50 per page</option>
+            <option value={100}>100 per page</option>
+          </select>
+          
+          <div className="text-sm">
+            <span className="text-gray-500">Showing </span>
+            <span className="font-medium text-pink-700">
+              {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}
+            </span>
+            <span className="text-gray-500"> to </span>
+            <span className="font-medium text-pink-700">
+              {Math.min(currentPage * itemsPerPage, totalItems)}
+            </span>
+            <span className="text-gray-500"> of </span>
+            <span className="font-medium text-pink-700">{totalItems}</span>
+            <span className="text-gray-500"> results</span>
+          </div>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setCurrentPage(1)}
+            disabled={currentPage === 1}
+            className="relative inline-flex items-center px-3 py-2 text-sm font-medium rounded-md text-pink-700 bg-pink-50 border border-pink-200 hover:bg-pink-100 disabled:opacity-50 disabled:hover:bg-pink-50 transition-colors duration-200"
+            title="First page"
+          >
+            ⟪
+          </button>
+          <button
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="relative inline-flex items-center px-3 py-2 text-sm font-medium rounded-md text-pink-700 bg-pink-50 border border-pink-200 hover:bg-pink-100 disabled:opacity-50 disabled:hover:bg-pink-50 transition-colors duration-200"
+            title="Previous page"
+          >
+            ←
+          </button>
+          
+          <div className="inline-flex items-center px-4 py-2 text-sm font-medium text-pink-700 bg-pink-50 border border-pink-200 rounded-md">
+            <span className="hidden sm:inline text-gray-500">Page </span>
+            <span className="font-semibold mx-1">{currentPage}</span>
+            <span className="hidden sm:inline text-gray-500"> of </span>
+            <span className="sm:ml-1 font-semibold">{totalPages}</span>
+          </div>
+          
+          <button
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="relative inline-flex items-center px-3 py-2 text-sm font-medium rounded-md text-pink-700 bg-pink-50 border border-pink-200 hover:bg-pink-100 disabled:opacity-50 disabled:hover:bg-pink-50 transition-colors duration-200"
+            title="Next page"
+          >
+            →
+          </button>
+          <button
+            onClick={() => setCurrentPage(totalPages)}
+            disabled={currentPage === totalPages}
+            className="relative inline-flex items-center px-3 py-2 text-sm font-medium rounded-md text-pink-700 bg-pink-50 border border-pink-200 hover:bg-pink-100 disabled:opacity-50 disabled:hover:bg-pink-50 transition-colors duration-200"
+            title="Last page"
+          >
+            ⟫
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   if (loading) return <div className="text-center p-4">Loading...</div>
   if (error) return <div className="text-red-500 p-4">{error}</div>
@@ -329,6 +421,9 @@ export default function SubscriberTable() {
         </div>
       </div>
 
+      {/* Add pagination controls */}
+      <PaginationControls totalItems={filterSubscribers(subscribers).length} />
+
       {/* Updated table container */}
       <div className="overflow-x-auto shadow-md rounded-lg">
         <table className="min-w-full table-fixed bg-white">
@@ -348,7 +443,7 @@ export default function SubscriberTable() {
             </tr>
           </thead>
           <tbody className="divide-y divide-pink-200">
-            {sortData(filterSubscribers(subscribers), sortConfig.key).map((subscriber) => (
+            {paginateData(sortData(filterSubscribers(subscribers), sortConfig.key)).map((subscriber) => (
               <tr key={subscriber.id} className="hover:bg-pink-50">
                 {visibleColumns.email && (
                   <td className="px-4 py-3 whitespace-nowrap text-sm">{subscriber.email}</td>
